@@ -1,5 +1,8 @@
 export class UnauthorizedError extends Error {
-  constructor(message = "The access token is missing or invalid.", options?: ErrorOptions) {
+  constructor(
+    message = "The access token is missing or invalid.",
+    options?: ErrorOptions,
+  ) {
     super(message, options);
     this.name = "UnauthorizedError";
   }

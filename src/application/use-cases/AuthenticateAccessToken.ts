@@ -2,7 +2,10 @@ import { createHash } from "node:crypto";
 import type { AccessTokenVerifier } from "../../domain/interfaces/AccessTokenVerifier.js";
 import type { AuthenticationCache } from "../../domain/interfaces/AuthenticationCache.js";
 import type { AuthPrincipal } from "../../domain/types/Auth.js";
-import { ForbiddenError, UnauthorizedError } from "../errors/AuthenticationErrors.js";
+import {
+  ForbiddenError,
+  UnauthorizedError,
+} from "../errors/AuthenticationErrors.js";
 
 export interface AuthenticateAccessTokenOptions {
   cacheTtlSeconds: number;
@@ -36,17 +39,25 @@ export class AuthenticateAccessToken {
         if (error instanceof UnauthorizedError) throw error;
         throw new UnauthorizedError(undefined, { cause: error });
       }
-      if (principal.expiresAt <= now) throw new UnauthorizedError("The access token has expired.");
-      const ttl = Math.min(this.options.cacheTtlSeconds, principal.expiresAt - now);
+      if (principal.expiresAt <= now)
+        throw new UnauthorizedError("The access token has expired.");
+      const ttl = Math.min(
+        this.options.cacheTtlSeconds,
+        principal.expiresAt - now,
+      );
       if (ttl > 0) await this.writeCache(tokenHash, principal, ttl);
     }
 
     const granted = new Set(principal.scopes);
-    if (!requiredScopes.every((scope) => granted.has(scope))) throw new ForbiddenError();
+    if (!requiredScopes.every((scope) => granted.has(scope)))
+      throw new ForbiddenError();
     return principal;
   }
 
-  private async readCache(tokenHash: string, now: number): Promise<AuthPrincipal | null> {
+  private async readCache(
+    tokenHash: string,
+    now: number,
+  ): Promise<AuthPrincipal | null> {
     try {
       const principal = await this.cache.get(tokenHash);
       if (principal && principal.expiresAt <= now) {
@@ -59,7 +70,11 @@ export class AuthenticateAccessToken {
     }
   }
 
-  private async writeCache(tokenHash: string, principal: AuthPrincipal, ttl: number): Promise<void> {
+  private async writeCache(
+    tokenHash: string,
+    principal: AuthPrincipal,
+    ttl: number,
+  ): Promise<void> {
     try {
       await this.cache.set(tokenHash, principal, ttl);
     } catch {

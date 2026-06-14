@@ -136,7 +136,10 @@ describe("POST /api/v1/receipts/scan", () => {
   });
   it("rejects requests without a Bearer token", async () => {
     app = await buildApp({ imageProcessor, receiptExtractor, authenticator });
-    const response = await app.inject({ method: "POST", url: "/api/v1/receipts/scan" });
+    const response = await app.inject({
+      method: "POST",
+      url: "/api/v1/receipts/scan",
+    });
     expect(response.statusCode).toBe(401);
     expect(response.headers["www-authenticate"]).toContain("Bearer");
     expect(receiptExtractor.extract).not.toHaveBeenCalled();
@@ -147,13 +150,20 @@ describe("POST /api/v1/receipts/scan", () => {
         throw new ForbiddenError();
       }),
     };
-    app = await buildApp({ imageProcessor, receiptExtractor, authenticator: deniedAuthenticator });
+    app = await buildApp({
+      imageProcessor,
+      receiptExtractor,
+      authenticator: deniedAuthenticator,
+    });
     const response = await app.inject({
       method: "POST",
       url: "/api/v1/receipts/scan",
       headers: authHeader,
     });
     expect(response.statusCode).toBe(403);
+    expect(response.headers["www-authenticate"]).toContain(
+      "insufficient_scope",
+    );
     expect(receiptExtractor.extract).not.toHaveBeenCalled();
   });
 });

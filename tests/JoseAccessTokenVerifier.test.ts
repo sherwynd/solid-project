@@ -8,11 +8,14 @@ describe("JoseAccessTokenVerifier", () => {
     const { publicKey, privateKey } = await generateKeyPair("RS256");
     const publicJwk = await exportJWK(publicKey);
     publicJwk.kid = "test-key";
-    const verifier = new JoseAccessTokenVerifier(createLocalJWKSet({ keys: [publicJwk] }), {
-      issuer: "https://issuer.example.com/",
-      audience: "receipt-api",
-      jwksUrl: "https://issuer.example.com/jwks.json",
-    });
+    const verifier = new JoseAccessTokenVerifier(
+      createLocalJWKSet({ keys: [publicJwk] }),
+      {
+        issuer: "https://issuer.example.com/",
+        audience: "receipt-api",
+        jwksUrl: "https://issuer.example.com/jwks.json",
+      },
+    );
     const token = await new SignJWT({ scope: "openid receipts:scan" })
       .setProtectedHeader({ alg: "RS256", kid: "test-key" })
       .setSubject("user-123")
@@ -31,11 +34,14 @@ describe("JoseAccessTokenVerifier", () => {
     const { publicKey, privateKey } = await generateKeyPair("RS256");
     const publicJwk = await exportJWK(publicKey);
     publicJwk.kid = "test-key";
-    const verifier = new JoseAccessTokenVerifier(createLocalJWKSet({ keys: [publicJwk] }), {
-      issuer: "https://issuer.example.com/",
-      audience: "receipt-api",
-      jwksUrl: "https://issuer.example.com/jwks.json",
-    });
+    const verifier = new JoseAccessTokenVerifier(
+      createLocalJWKSet({ keys: [publicJwk] }),
+      {
+        issuer: "https://issuer.example.com/",
+        audience: "receipt-api",
+        jwksUrl: "https://issuer.example.com/jwks.json",
+      },
+    );
     const token = await new SignJWT({ scope: "receipts:scan" })
       .setProtectedHeader({ alg: "RS256", kid: "test-key" })
       .setSubject("user-123")

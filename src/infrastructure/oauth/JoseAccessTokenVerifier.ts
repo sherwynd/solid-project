@@ -7,7 +7,10 @@ import {
 import { z } from "zod";
 import { UnauthorizedError } from "../../application/errors/AuthenticationErrors.js";
 import type { AccessTokenVerifier } from "../../domain/interfaces/AccessTokenVerifier.js";
-import { authPrincipalSchema, type AuthPrincipal } from "../../domain/types/Auth.js";
+import {
+  authPrincipalSchema,
+  type AuthPrincipal,
+} from "../../domain/types/Auth.js";
 
 const payloadSchema = z.object({
   sub: z.string().min(1),
@@ -31,8 +34,13 @@ export class JoseAccessTokenVerifier implements AccessTokenVerifier {
     private readonly config: JoseAccessTokenVerifierConfig,
   ) {}
 
-  static create(config: JoseAccessTokenVerifierConfig): JoseAccessTokenVerifier {
-    return new JoseAccessTokenVerifier(createRemoteJWKSet(new URL(config.jwksUrl)), config);
+  static create(
+    config: JoseAccessTokenVerifierConfig,
+  ): JoseAccessTokenVerifier {
+    return new JoseAccessTokenVerifier(
+      createRemoteJWKSet(new URL(config.jwksUrl)),
+      config,
+    );
   }
 
   async verify(accessToken: string): Promise<AuthPrincipal> {
@@ -44,7 +52,9 @@ export class JoseAccessTokenVerifier implements AccessTokenVerifier {
       });
       return mapPayload(result.payload);
     } catch (error) {
-      throw new UnauthorizedError("The access token is invalid.", { cause: error });
+      throw new UnauthorizedError("The access token is invalid.", {
+        cause: error,
+      });
     }
   }
 }

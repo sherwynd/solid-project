@@ -33,7 +33,12 @@ export async function startServer(): Promise<void> {
     logger: true,
   });
   app.addHook("onClose", async () => authCache.close());
-  await app.listen({ port: env.PORT, host: env.HOST });
+  try {
+    await app.listen({ port: env.PORT, host: env.HOST });
+  } catch (error) {
+    await app.close();
+    throw error;
+  }
 }
 if (process.argv[1] === fileURLToPath(import.meta.url))
   startServer().catch((error: unknown) => {

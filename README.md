@@ -77,7 +77,6 @@ form.append("file", {
   name: "receipt.jpg",
   type: "image/jpeg",
 } as unknown as Blob);
-await fetch(`${API_URL}/api/v1/receipts/scan`, { method: "POST", body: form });
 await fetch(`${API_URL}/api/v1/receipts/scan`, {
   method: "POST",
   headers: { Authorization: `Bearer ${accessToken}` },
