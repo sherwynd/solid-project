@@ -1,0 +1,4 @@
+interface:
+  display_name: "Node Express Business Flow"
+  short_description: "Trace process flows and enforce business rules"
+  default_prompt: "Use $node-express-business-flow to trace this Express workflow end to end and implement its business rules safely."

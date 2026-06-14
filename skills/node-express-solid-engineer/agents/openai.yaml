@@ -1,0 +1,4 @@
+interface:
+  display_name: "Senior Node Express SOLID Engineer"
+  short_description: "Design and refactor robust Node Express services"
+  default_prompt: "Use $node-express-solid-engineer to implement or refactor this Node.js/Express feature with SOLID design and senior-level engineering judgment."

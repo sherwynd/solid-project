@@ -1,0 +1,4 @@
+interface:
+  display_name: "Node Express Quality Automation"
+  short_description: "Find bugs and automate Node quality checks"
+  default_prompt: "Use $node-express-quality-automation to inspect this Node.js/Express change for bugs and run the appropriate automated quality checks."
