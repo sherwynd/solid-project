@@ -1,10 +1,6 @@
-# Dependencies
-/node_modules
-
-# Test Coverage
-/coverage
-
-# Build
-/build
-
+node_modules/
+dist/
+coverage/
 .env
+.DS_Store
+*.log

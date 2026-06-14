@@ -1,32 +1,37 @@
 {
+  "name": "malaysian-receipt-scanner",
+  "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "tsx watch ./src/server.ts",
-    "dev:debug": "tsx watch --inspect ./src/server.ts",
-    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --coverage"
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "lint": "eslint src tests",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "test": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --watchman=false",
+    "coverage": "npm test -- --coverage"
   },
   "dependencies": {
-    "dotenv": "^17.4.1",
-    "express": "^5.2.1",
-    "ioredis": "^5.10.1",
-    "zod": "^4.3.6"
+    "@fastify/multipart": "^10.0.0",
+    "@google-cloud/documentai": "^9.6.2",
+    "dotenv": "^17.4.2",
+    "fastify": "^5.8.5",
+    "sharp": "^0.35.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/express": "^5.0.6",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.6.0",
-    "@types/supertest": "^7.2.0",
     "cross-env": "^10.1.0",
     "eslint": "^9.39.4",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-import": "^2.32.0",
     "globals": "^17.4.0",
     "jest": "^30.3.0",
-    "jiti": "^2.6.1",
     "prettier": "^3.8.2",
-    "supertest": "^7.2.2",
     "ts-jest": "^29.4.9",
-    "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.1"

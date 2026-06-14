@@ -1,34 +1,26 @@
-import express from 'express'
-import dotenv from 'dotenv'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath } from "node:url";
+import { buildApp } from "./app.js";
+import { loadEnv } from "./config/env.js";
+import { GoogleDocumentAiReceiptExtractor } from "./infrastructure/google/GoogleDocumentAiReceiptExtractor.js";
+import { SharpImageProcessor } from "./infrastructure/image/SharpImageProcessor.js";
 
-dotenv.config()
-const app = express()
-const port = Number(process.env.PORT) || 3000
-
-app.get('/', (req, res) => {
-  res.send('Hello World!')
-})
-
-app.get('/user', (req, res) => {
-  const user = {
-    id: 1,
-    name: 'John Doe',
-    email: 'johndoe@gmail.com',
-  }
-  res.json(user)
-})
-
-const __filename = fileURLToPath(import.meta.url)
-const isMainModule =
-  process.argv[1] !== undefined &&
-  path.resolve(process.argv[1]) === __filename
-
-if (isMainModule) {
-  app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
-  })
+export async function startServer(): Promise<void> {
+  const env = loadEnv();
+  const app = await buildApp({
+    imageProcessor: new SharpImageProcessor(),
+    receiptExtractor: GoogleDocumentAiReceiptExtractor.create({
+      projectId: env.GOOGLE_CLOUD_PROJECT_ID,
+      location: env.GOOGLE_CLOUD_LOCATION,
+      processorId: env.GOOGLE_DOCUMENT_AI_PROCESSOR_ID,
+    }),
+    lowConfidenceThreshold: env.RECEIPT_LOW_CONFIDENCE_THRESHOLD,
+    reconciliationTolerance: env.RECEIPT_RECONCILIATION_TOLERANCE,
+    logger: true,
+  });
+  await app.listen({ port: env.PORT, host: env.HOST });
 }
-
-export { app }
+if (process.argv[1] === fileURLToPath(import.meta.url))
+  startServer().catch((error: unknown) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
