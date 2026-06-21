@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, jest } from "@jest/globals";
 import type { FastifyInstance } from "fastify";
 import { buildApp } from "../src/app.js";
+import { apiRoutes } from "../src/api/routes/apiRoutes.js";
+import type { ReceiptRoutesOptions } from "../src/api/routes/receiptRoutes.js";
 import type { ImageProcessor } from "../src/domain/interfaces/ImageProcessor.js";
 import type { ReceiptExtractor } from "../src/domain/interfaces/ReceiptExtractor.js";
 import { ReceiptExtractionUnavailableError } from "../src/application/errors/ReceiptErrors.js";
@@ -33,6 +35,13 @@ const authenticator: AccessTokenAuthenticator = {
 };
 const authHeader = { authorization: "Bearer valid-access-token" };
 let app: FastifyInstance | undefined;
+
+function buildReceiptApp(
+  options: ReceiptRoutesOptions,
+): Promise<FastifyInstance> {
+  return buildApp({ routes: apiRoutes({ receipt: options }) });
+}
+
 afterEach(async () => {
   await app?.close();
   app = undefined;
@@ -58,7 +67,11 @@ function multipart(
 }
 describe("POST /api/v1/receipts/scan", () => {
   it("accepts a valid multipart receipt", async () => {
-    app = await buildApp({ imageProcessor, receiptExtractor, authenticator });
+    app = await buildReceiptApp({
+      imageProcessor,
+      receiptExtractor,
+      authenticator,
+    });
     const upload = multipart("receipt.jpg", "image/jpeg", Buffer.from("image"));
     const response = await app.inject({
       method: "POST",
@@ -73,7 +86,11 @@ describe("POST /api/v1/receipts/scan", () => {
     });
   });
   it("rejects non-multipart requests", async () => {
-    app = await buildApp({ imageProcessor, receiptExtractor, authenticator });
+    app = await buildReceiptApp({
+      imageProcessor,
+      receiptExtractor,
+      authenticator,
+    });
     const response = await app.inject({
       method: "POST",
       url: "/api/v1/receipts/scan",
@@ -86,7 +103,11 @@ describe("POST /api/v1/receipts/scan", () => {
     });
   });
   it("rejects unsupported files", async () => {
-    app = await buildApp({ imageProcessor, receiptExtractor, authenticator });
+    app = await buildReceiptApp({
+      imageProcessor,
+      receiptExtractor,
+      authenticator,
+    });
     const upload = multipart(
       "receipt.pdf",
       "application/pdf",
@@ -104,7 +125,11 @@ describe("POST /api/v1/receipts/scan", () => {
     });
   });
   it("rejects files larger than 10 MB", async () => {
-    app = await buildApp({ imageProcessor, receiptExtractor, authenticator });
+    app = await buildReceiptApp({
+      imageProcessor,
+      receiptExtractor,
+      authenticator,
+    });
     const upload = multipart(
       "receipt.jpg",
       "image/jpeg",
@@ -120,7 +145,7 @@ describe("POST /api/v1/receipts/scan", () => {
     expect(response.json()).toMatchObject({ code: "UPLOAD_FILE_TOO_LARGE" });
   });
   it("maps Google failure to a safe 502", async () => {
-    app = await buildApp({
+    app = await buildReceiptApp({
       imageProcessor,
       receiptExtractor: {
         extract: jest.fn(async () => {
@@ -145,7 +170,11 @@ describe("POST /api/v1/receipts/scan", () => {
     });
   });
   it("rejects requests without a Bearer token", async () => {
-    app = await buildApp({ imageProcessor, receiptExtractor, authenticator });
+    app = await buildReceiptApp({
+      imageProcessor,
+      receiptExtractor,
+      authenticator,
+    });
     const response = await app.inject({
       method: "POST",
       url: "/api/v1/receipts/scan",
@@ -161,7 +190,7 @@ describe("POST /api/v1/receipts/scan", () => {
         throw new InsufficientScopeError(["receipts:scan"]);
       }),
     };
-    app = await buildApp({
+    app = await buildReceiptApp({
       imageProcessor,
       receiptExtractor,
       authenticator: deniedAuthenticator,
@@ -180,7 +209,7 @@ describe("POST /api/v1/receipts/scan", () => {
   });
 
   it("hides unexpected error details behind a stable internal code", async () => {
-    app = await buildApp({
+    app = await buildReceiptApp({
       imageProcessor,
       receiptExtractor: {
         extract: jest.fn(async () => {
@@ -207,7 +236,11 @@ describe("POST /api/v1/receipts/scan", () => {
   });
 
   it("returns a stable code and request ID for unknown routes", async () => {
-    app = await buildApp({ imageProcessor, receiptExtractor, authenticator });
+    app = await buildReceiptApp({
+      imageProcessor,
+      receiptExtractor,
+      authenticator,
+    });
 
     const response = await app.inject({ method: "GET", url: "/missing" });
 

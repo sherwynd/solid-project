@@ -4,7 +4,7 @@ Node.js, TypeScript, and Fastify backend for authenticated receipt images upload
 
 ## Architecture
 
-The `src/api` folder is the HTTP boundary for this API-only service. It owns Fastify routes, controllers, authentication hooks, HTTP error mapping, and Fastify-specific types; it does not represent a frontend UI.
+The `src/api` folder is the HTTP boundary for this API-only service. It owns Fastify routes, controllers, authentication hooks, HTTP error mapping, and Fastify-specific types; it does not represent a frontend UI. `app.ts` only creates Fastify and mounts the supplied API router, while `server.ts` only starts the production runtime. Production Redis, OAuth, Sharp, and Google wiring lives in `src/bootstrap`.
 
 `POST /api/v1/receipts/scan` flows through a Fastify authentication adapter and thin controller into `ScanReceipt`.
 
