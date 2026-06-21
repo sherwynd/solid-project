@@ -1,15 +1,21 @@
 import { fileURLToPath } from "node:url";
 import { buildApp } from "./app.js";
 import { loadEnv } from "./config/env.js";
+import { authPrincipalSchema } from "./domain/types/Auth.js";
 import { GoogleDocumentAiReceiptExtractor } from "./infrastructure/google/GoogleDocumentAiReceiptExtractor.js";
 import { SharpImageProcessor } from "./infrastructure/image/SharpImageProcessor.js";
 import { AuthenticateAccessToken } from "./application/use-cases/AuthenticateAccessToken.js";
 import { JoseAccessTokenVerifier } from "./infrastructure/oauth/JoseAccessTokenVerifier.js";
-import { RedisAuthenticationCache } from "./infrastructure/redis/RedisAuthenticationCache.js";
+import { createJsonCacheCodec } from "./infrastructure/cache/JsonCacheCodec.js";
+import { RedisCacheConnection } from "./infrastructure/redis/RedisCache.js";
 
 export async function startServer(): Promise<void> {
   const env = loadEnv();
-  const authCache = RedisAuthenticationCache.create(env.REDIS_URL);
+  const redis = RedisCacheConnection.create(env.REDIS_URL);
+  const authCache = redis.createCache(
+    "auth",
+    createJsonCacheCodec(authPrincipalSchema),
+  );
   const authenticator = new AuthenticateAccessToken(
     JoseAccessTokenVerifier.create({
       issuer: env.OAUTH_ISSUER_URL,
@@ -32,7 +38,7 @@ export async function startServer(): Promise<void> {
     reconciliationTolerance: env.RECEIPT_RECONCILIATION_TOLERANCE,
     logger: true,
   });
-  app.addHook("onClose", async () => authCache.close());
+  app.addHook("onClose", async () => redis.close());
   try {
     await app.listen({ port: env.PORT, host: env.HOST });
   } catch (error) {

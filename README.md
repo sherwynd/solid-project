@@ -6,8 +6,8 @@ Node.js, TypeScript, and Fastify backend for authenticated receipt images upload
 
 `POST /api/v1/receipts/scan` flows through a Fastify authentication adapter and thin controller into `ScanReceipt`.
 
-- `AuthenticateAccessToken` depends on `AccessTokenVerifier` and `AuthenticationCache` interfaces.
-- JOSE/JWKS token validation and Redis are replaceable infrastructure adapters.
+- `AuthenticateAccessToken` depends on `AccessTokenVerifier` and a typed cache interface.
+- JOSE/JWKS token validation and the reusable Redis cache are replaceable infrastructure adapters.
 - `ScanReceipt` depends only on `ImageProcessor` and `ReceiptExtractor` interfaces.
 - Sharp and Google Document AI are replaceable infrastructure adapters.
 - Malaysian normalization, confidence review, and financial reconciliation live in domain code.
@@ -34,6 +34,15 @@ docker compose up -d redis
 ```
 
 Set `REDIS_URL` and `AUTH_CACHE_TTL_SECONDS`. Redis keys contain only a SHA-256 hash of the bearer token, never the raw token. Cached principals are validated with Zod, and cache TTL is capped by the token expiry. Authentication falls back to direct JWKS verification during a temporary Redis failure.
+
+The Redis implementation is shared infrastructure rather than an authentication-only adapter. Each cache purpose gets an isolated namespace and a typed JSON codec that validates values when they are read. New caches can reuse the same Redis connection by defining their own namespace and validator; application code continues to depend on the generic `Cache<T>` contract rather than `ioredis`.
+
+```ts
+const jobStatusCache = redis.createCache(
+  "receipt-job-status",
+  createJsonCacheCodec(receiptJobStatusSchema),
+);
+```
 
 ## Google Cloud Setup
 
