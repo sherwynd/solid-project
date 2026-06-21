@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { createLocalJWKSet, exportJWK, generateKeyPair, SignJWT } from "jose";
-import { UnauthorizedError } from "../src/application/errors/AuthenticationErrors.js";
+import { AccessTokenInvalidError } from "../src/application/errors/AuthenticationErrors.js";
 import { JoseAccessTokenVerifier } from "../src/infrastructure/oauth/JoseAccessTokenVerifier.js";
 
 describe("JoseAccessTokenVerifier", () => {
@@ -49,6 +49,8 @@ describe("JoseAccessTokenVerifier", () => {
       .setAudience("another-api")
       .setExpirationTime("5m")
       .sign(privateKey);
-    await expect(verifier.verify(token)).rejects.toThrow(UnauthorizedError);
+    await expect(verifier.verify(token)).rejects.toThrow(
+      AccessTokenInvalidError,
+    );
   });
 });

@@ -8,6 +8,7 @@ import { AuthenticateAccessToken } from "./application/use-cases/AuthenticateAcc
 import { JoseAccessTokenVerifier } from "./infrastructure/oauth/JoseAccessTokenVerifier.js";
 import { createJsonCacheCodec } from "./infrastructure/cache/JsonCacheCodec.js";
 import { RedisCacheConnection } from "./infrastructure/redis/RedisCache.js";
+import { ServerStartError } from "./application/errors/SystemErrors.js";
 
 export async function startServer(): Promise<void> {
   const env = loadEnv();
@@ -43,7 +44,7 @@ export async function startServer(): Promise<void> {
     await app.listen({ port: env.PORT, host: env.HOST });
   } catch (error) {
     await app.close();
-    throw error;
+    throw new ServerStartError({ cause: error });
   }
 }
 if (process.argv[1] === fileURLToPath(import.meta.url))

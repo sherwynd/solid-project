@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { z } from "zod";
+import { ConfigurationError } from "../application/errors/SystemErrors.js";
 const envSchema = z.object({
   NODE_ENV: z
     .enum(["development", "test", "production"])
@@ -24,5 +25,7 @@ const envSchema = z.object({
 });
 export type AppEnv = z.infer<typeof envSchema>;
 export function loadEnv(source: NodeJS.ProcessEnv = process.env): AppEnv {
-  return envSchema.parse(source);
+  const result = envSchema.safeParse(source);
+  if (!result.success) throw new ConfigurationError({ cause: result.error });
+  return result.data;
 }

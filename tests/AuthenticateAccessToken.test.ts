@@ -1,6 +1,6 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import { AuthenticateAccessToken } from "../src/application/use-cases/AuthenticateAccessToken.js";
-import { ForbiddenError } from "../src/application/errors/AuthenticationErrors.js";
+import { InsufficientScopeError } from "../src/application/errors/AuthenticationErrors.js";
 import type { AccessTokenVerifier } from "../src/domain/interfaces/AccessTokenVerifier.js";
 import type { AuthenticationCache } from "../src/domain/interfaces/AuthenticationCache.js";
 import type { AuthPrincipal } from "../src/domain/types/Auth.js";
@@ -60,7 +60,7 @@ describe("AuthenticateAccessToken", () => {
       { cacheTtlSeconds: 300, now: () => 1_000 },
     );
     await expect(useCase.execute("token", ["receipts:scan"])).rejects.toThrow(
-      ForbiddenError,
+      InsufficientScopeError,
     );
   });
 

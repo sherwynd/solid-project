@@ -4,6 +4,8 @@ Node.js, TypeScript, and Fastify backend for authenticated receipt images upload
 
 ## Architecture
 
+The `src/api` folder is the HTTP boundary for this API-only service. It owns Fastify routes, controllers, authentication hooks, HTTP error mapping, and Fastify-specific types; it does not represent a frontend UI.
+
 `POST /api/v1/receipts/scan` flows through a Fastify authentication adapter and thin controller into `ScanReceipt`.
 
 - `AuthenticateAccessToken` depends on `AccessTokenVerifier` and a typed cache interface.
@@ -11,6 +13,20 @@ Node.js, TypeScript, and Fastify backend for authenticated receipt images upload
 - `ScanReceipt` depends only on `ImageProcessor` and `ReceiptExtractor` interfaces.
 - Sharp and Google Document AI are replaceable infrastructure adapters.
 - Malaysian normalization, confidence review, and financial reconciliation live in domain code.
+
+## Error Contract
+
+Expected failures use application-owned custom errors and are mapped by one Fastify error handler. Error codes are stable and capability-prefixed (`AUTH_*`, `UPLOAD_*`, `IMAGE_*`, `OCR_*`, `CACHE_*`, and `CONFIG_*`). The API keeps the original `error` string for client compatibility and adds `code` and `requestId`:
+
+```json
+{
+  "error": "Receipt OCR provider is unavailable.",
+  "code": "OCR_PROVIDER_UNAVAILABLE",
+  "requestId": "req-123"
+}
+```
+
+Full stacks and wrapped `cause` values stay in server logs for `5xx` failures. Unknown errors return `INTERNAL_SERVER_ERROR`; provider messages, credentials, stacks, and internal filenames are never returned to clients.
 
 ## OAuth 2.0 Setup
 

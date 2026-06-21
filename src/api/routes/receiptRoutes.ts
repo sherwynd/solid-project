@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync, preHandlerAsyncHookHandler } from "fastify";
 import type { ReceiptController } from "../controllers/ReceiptController.js";
+
 export function receiptRoutes(
   controller: ReceiptController,
   authenticate: preHandlerAsyncHookHandler,

@@ -5,6 +5,7 @@ import {
   scanReceiptResponseSchema,
   type ScanReceiptResponse,
 } from "../../domain/types/Receipt.js";
+import { ReceiptResultInvalidError } from "../errors/ReceiptErrors.js";
 
 export interface ScanReceiptInput {
   buffer: Buffer;
@@ -21,8 +22,12 @@ export class ScanReceipt {
       input.buffer,
       input.mimeType,
     );
-    return scanReceiptResponseSchema.parse(
-      this.normalizer.normalize(await this.receiptExtractor.extract(image)),
+    const normalized = this.normalizer.normalize(
+      await this.receiptExtractor.extract(image),
     );
+    const result = scanReceiptResponseSchema.safeParse(normalized);
+    if (!result.success)
+      throw new ReceiptResultInvalidError({ cause: result.error });
+    return result.data;
   }
 }

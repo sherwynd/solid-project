@@ -4,12 +4,13 @@ import { ReceiptNormalizer } from "./domain/entities/ReceiptNormalizer.js";
 import type { ImageProcessor } from "./domain/interfaces/ImageProcessor.js";
 import type { ReceiptExtractor } from "./domain/interfaces/ReceiptExtractor.js";
 import { ScanReceipt } from "./application/use-cases/ScanReceipt.js";
-import { ReceiptController } from "./presentation/controllers/ReceiptController.js";
-import { receiptRoutes } from "./presentation/routes/receiptRoutes.js";
+import { ReceiptController } from "./api/controllers/ReceiptController.js";
+import { receiptRoutes } from "./api/routes/receiptRoutes.js";
 import {
   createAuthenticationGuard,
   type AccessTokenAuthenticator,
-} from "./presentation/auth/createAuthenticationGuard.js";
+} from "./api/auth/createAuthenticationGuard.js";
+import { registerErrorHandling } from "./api/errors/registerErrorHandling.js";
 
 export interface BuildAppOptions {
   imageProcessor: ImageProcessor;
@@ -27,6 +28,7 @@ export async function buildApp(
     logger: options.logger ?? false,
     bodyLimit: 11 * 1024 * 1024,
   });
+  registerErrorHandling(app);
   await app.register(multipart, {
     limits: { files: 1, fields: 0, fileSize: 10 * 1024 * 1024 },
     throwFileSizeLimit: true,

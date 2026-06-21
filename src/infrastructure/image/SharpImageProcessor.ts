@@ -3,15 +3,13 @@ import type {
   ImageProcessor,
   ProcessedImage,
 } from "../../domain/interfaces/ImageProcessor.js";
+import {
+  ImageFormatUnsupportedError,
+  ImageMimeMismatchError,
+  ImageUnreadableError,
+} from "../../application/errors/ReceiptErrors.js";
 
 const FORMATS = new Set(["jpeg", "png", "webp"]);
-export class InvalidImageError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "InvalidImageError";
-  }
-}
-
 export class SharpImageProcessor implements ImageProcessor {
   async process(
     buffer: Buffer,
@@ -24,15 +22,10 @@ export class SharpImageProcessor implements ImageProcessor {
       });
       const metadata = await image.metadata();
       if (!FORMATS.has(metadata.format))
-        throw new InvalidImageError(
-          "Only valid JPEG, PNG, or WebP images are supported.",
-        );
+        throw new ImageFormatUnsupportedError();
       const expected =
         metadata.format === "jpeg" ? "image/jpeg" : `image/${metadata.format}`;
-      if (declaredMimeType !== expected)
-        throw new InvalidImageError(
-          "The uploaded file content does not match its MIME type.",
-        );
+      if (declaredMimeType !== expected) throw new ImageMimeMismatchError();
       const processed = await image
         .rotate()
         .resize({
@@ -46,10 +39,12 @@ export class SharpImageProcessor implements ImageProcessor {
         .toBuffer();
       return { buffer: processed, mimeType: "image/jpeg" };
     } catch (error) {
-      if (error instanceof InvalidImageError) throw error;
-      throw new InvalidImageError(
-        "The uploaded file is not a readable receipt image.",
-      );
+      if (
+        error instanceof ImageFormatUnsupportedError ||
+        error instanceof ImageMimeMismatchError
+      )
+        throw error;
+      throw new ImageUnreadableError({ cause: error });
     }
   }
 }

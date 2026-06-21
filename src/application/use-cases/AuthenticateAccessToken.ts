@@ -3,8 +3,10 @@ import type { AccessTokenVerifier } from "../../domain/interfaces/AccessTokenVer
 import type { AuthenticationCache } from "../../domain/interfaces/AuthenticationCache.js";
 import type { AuthPrincipal } from "../../domain/types/Auth.js";
 import {
-  ForbiddenError,
-  UnauthorizedError,
+  AccessTokenExpiredError,
+  AccessTokenInvalidError,
+  AccessTokenRequiredError,
+  InsufficientScopeError,
 } from "../errors/AuthenticationErrors.js";
 
 export interface AuthenticateAccessTokenOptions {
@@ -27,7 +29,7 @@ export class AuthenticateAccessToken {
     accessToken: string,
     requiredScopes: readonly string[],
   ): Promise<AuthPrincipal> {
-    if (!accessToken) throw new UnauthorizedError();
+    if (!accessToken) throw new AccessTokenRequiredError();
     const tokenHash = createHash("sha256").update(accessToken).digest("hex");
     const now = this.now();
     let principal = await this.readCache(tokenHash, now);
@@ -36,11 +38,10 @@ export class AuthenticateAccessToken {
       try {
         principal = await this.verifier.verify(accessToken);
       } catch (error) {
-        if (error instanceof UnauthorizedError) throw error;
-        throw new UnauthorizedError(undefined, { cause: error });
+        if (error instanceof AccessTokenInvalidError) throw error;
+        throw new AccessTokenInvalidError(undefined, { cause: error });
       }
-      if (principal.expiresAt <= now)
-        throw new UnauthorizedError("The access token has expired.");
+      if (principal.expiresAt <= now) throw new AccessTokenExpiredError();
       const ttl = Math.min(
         this.options.cacheTtlSeconds,
         principal.expiresAt - now,
@@ -50,7 +51,7 @@ export class AuthenticateAccessToken {
 
     const granted = new Set(principal.scopes);
     if (!requiredScopes.every((scope) => granted.has(scope)))
-      throw new ForbiddenError();
+      throw new InsufficientScopeError(requiredScopes);
     return principal;
   }
 

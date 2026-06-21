@@ -12,6 +12,7 @@ import type {
   ExtractedReceipt,
   ExtractedValue,
 } from "../../domain/types/ExtractedReceipt.js";
+import { ReceiptExtractionUnavailableError } from "../../application/errors/ReceiptErrors.js";
 
 const documentSchema = z.object({
   entities: z
@@ -35,13 +36,6 @@ export interface DocumentAiClient {
     ]
   >;
 }
-export class ReceiptExtractionError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = "ReceiptExtractionError";
-  }
-}
-
 export class GoogleDocumentAiReceiptExtractor implements ReceiptExtractor {
   private readonly processorName: string;
   constructor(
@@ -73,10 +67,7 @@ export class GoogleDocumentAiReceiptExtractor implements ReceiptExtractor {
         documentSchema.parse(response.document ?? {}).entities,
       );
     } catch (error) {
-      throw new ReceiptExtractionError(
-        "Google Document AI could not process the receipt.",
-        { cause: error },
-      );
+      throw new ReceiptExtractionUnavailableError({ cause: error });
     }
   }
 }

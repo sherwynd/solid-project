@@ -12,8 +12,10 @@ import {
 class FakeRedis implements RedisClient {
   readonly values = new Map<string, string>();
   lastSet: { key: string; ttl: number } | null = null;
+  readFailure: Error | null = null;
 
   async get(key: string): Promise<string | null> {
+    if (this.readFailure) throw this.readFailure;
     return this.values.get(key) ?? null;
   }
 
@@ -95,12 +97,27 @@ describe("RedisCache", () => {
 
     await expect(
       cache.set("abc123", { id: "user-1", roles: [] }, 0),
-    ).rejects.toThrow("Cache TTL must be a positive integer.");
+    ).rejects.toMatchObject({
+      code: "CACHE_INVALID_TTL",
+      message: "Cache TTL must be a positive integer.",
+    });
   });
 
   it("requires a namespace", () => {
     expect(() => new RedisCache(new FakeRedis(), " ", userCodec())).toThrow(
-      "Cache namespace is required.",
+      expect.objectContaining({ code: "CACHE_NAMESPACE_REQUIRED" }),
     );
+  });
+
+  it("classifies Redis read failures and preserves their cause", async () => {
+    const redis = new FakeRedis();
+    const cause = new Error("connection refused");
+    redis.readFailure = cause;
+    const cache = new RedisCache(redis, "users", userCodec());
+
+    await expect(cache.get("abc123")).rejects.toMatchObject({
+      code: "CACHE_READ_FAILED",
+      cause,
+    });
   });
 });

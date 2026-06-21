@@ -5,7 +5,7 @@ import {
   type JWTPayload,
 } from "jose";
 import { z } from "zod";
-import { UnauthorizedError } from "../../application/errors/AuthenticationErrors.js";
+import { AccessTokenInvalidError } from "../../application/errors/AuthenticationErrors.js";
 import type { AccessTokenVerifier } from "../../domain/interfaces/AccessTokenVerifier.js";
 import {
   authPrincipalSchema,
@@ -52,7 +52,7 @@ export class JoseAccessTokenVerifier implements AccessTokenVerifier {
       });
       return mapPayload(result.payload);
     } catch (error) {
-      throw new UnauthorizedError("The access token is invalid.", {
+      throw new AccessTokenInvalidError("The access token is invalid.", {
         cause: error,
       });
     }

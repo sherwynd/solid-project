@@ -1,9 +1,9 @@
 import { describe, expect, it, jest } from "@jest/globals";
 import {
   GoogleDocumentAiReceiptExtractor,
-  ReceiptExtractionError,
   type DocumentAiClient,
 } from "../src/infrastructure/google/GoogleDocumentAiReceiptExtractor.js";
+import { ReceiptExtractionUnavailableError } from "../src/application/errors/ReceiptErrors.js";
 
 describe("GoogleDocumentAiReceiptExtractor", () => {
   it("maps a successful response including SST and service charge", async () => {
@@ -65,7 +65,7 @@ describe("GoogleDocumentAiReceiptExtractor", () => {
       buffer: Buffer.from("image"),
       mimeType: "image/jpeg",
     });
-    await expect(promise).rejects.toThrow(ReceiptExtractionError);
+    await expect(promise).rejects.toThrow(ReceiptExtractionUnavailableError);
     await expect(promise).rejects.not.toThrow("secret credential text");
   });
 });
